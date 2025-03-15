@@ -10,7 +10,7 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ../data/traefik/https.yml:/etc/traefik/traefik.yml:ro
+      - ../data/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ../data/traefik/acme/acme.json:/etc/traefik/acme/acme.json:rw
     networks:
       - web
@@ -18,16 +18,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.tls=true"
-      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
-      # Global redirect to HTTPS
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-      - "traefik.http.routers.redirect.rule=HostRegexp(`{any:.*}`)"
-      - "traefik.http.routers.redirect.entrypoints=web"
-      - "traefik.http.routers.redirect.middlewares=redirect-to-https"
 
   mongodb:
     image: mongo:6
@@ -65,9 +56,9 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
       
-      # API URLs (using HTTPS with Traefik routing)
-      - API_URL=https://${DOMAIN}/api
-      - FRONTEND_URL=https://${DOMAIN}
+      # API URLs
+      - API_URL=${PROTOCOL}://${DOMAIN}/api
+      - FRONTEND_URL=${PROTOCOL}://${DOMAIN}
       
       # Discord Notifications
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
@@ -78,20 +69,25 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend-secure.rule=Host(`api.${DOMAIN}`)"
-      - "traefik.http.routers.backend-secure.entrypoints=websecure"
-      - "traefik.http.routers.backend-secure.tls=true"
-      - "traefik.http.routers.backend-secure.tls.certresolver=letsencrypt"
+      # Common configurations
+      - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
+      # HTTP route
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web,websecure"
+      - "traefik.http.routers.backend.middlewares=backend-strip"
+      # Add TLS if PROTOCOL is https
+      - "traefik.http.routers.backend.tls=${IS_HTTPS:-false}"
+      - "traefik.http.routers.backend.tls.certresolver=${TLS_RESOLVER:-}"
 
   frontend:
     image: ${IMAGE_PATH}/frontend:latest
     container_name: frontend
     restart: unless-stopped
     environment:
-      # API Configuration (using HTTPS)
-      - VITE_API_URL=https://api.${DOMAIN}
-      - VITE_PUBLIC_URL=https://${DOMAIN}
+      # API Configuration
+      - VITE_API_URL=${PROTOCOL}://${DOMAIN}/api
+      - VITE_PUBLIC_URL=${PROTOCOL}://${DOMAIN}
       - VITE_APP_NAME=${APP_NAME:-Task Manager}
     depends_on:
       - backend
@@ -99,11 +95,13 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend-secure.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
-      - "traefik.http.routers.frontend-secure.tls=true"
-      - "traefik.http.routers.frontend-secure.tls.certresolver=letsencrypt"
+      # Route configuration
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend.entrypoints=web,websecure"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      # Add TLS if PROTOCOL is https
+      - "traefik.http.routers.frontend.tls=${IS_HTTPS:-false}"
+      - "traefik.http.routers.frontend.tls.certresolver=${TLS_RESOLVER:-}"
 
 networks:
   web:

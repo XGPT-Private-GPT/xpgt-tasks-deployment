@@ -1,4 +1,3 @@
-# HTTP-only mode configuration
 api:
   dashboard: true
   insecure: true
@@ -6,6 +5,16 @@ api:
 entryPoints:
   web:
     address: ":80"
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ${EMAIL}
+      storage: /etc/traefik/acme/acme.json
+      httpChallenge:
+        entryPoint: web
 
 providers:
   docker:
@@ -14,5 +23,3 @@ providers:
 
 log:
   level: INFO
-
-accessLog: {}
