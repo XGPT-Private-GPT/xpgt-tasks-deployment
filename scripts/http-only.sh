@@ -8,8 +8,8 @@ echo "🔧 Starting HTTP-only deployment..."
 
 # Pull the latest images
 echo "🔄 Pulling latest images..."
-docker pull ${IMAGE_PATH}/backend:latest
-docker pull ${IMAGE_PATH}/frontend:latest
+docker pull ghcr.io/xgpt-private-gpt/tasks-xgpt-works/backend:latest
+docker pull ghcr.io/xgpt-private-gpt/tasks-xgpt-works/frontend:latest
 
 # Start the containers in HTTP-only mode
 echo "🚀 Starting services in HTTP-only mode..."
