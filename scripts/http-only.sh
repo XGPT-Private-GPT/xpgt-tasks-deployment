@@ -9,11 +9,6 @@ echo "🔧 Starting HTTP-only deployment..."
 echo "📝 Checking environment configuration..."
 source ./scripts/check-env.sh
 
-# Create necessary directories if they don't exist
-echo "📁 Creating necessary directories..."
-mkdir -p data/traefik
-mkdir -p data/mongodb
-
 # Pull the latest images
 echo "🔄 Pulling latest images..."
 docker pull ${IMAGE_PATH}/backend:latest

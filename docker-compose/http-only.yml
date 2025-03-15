@@ -8,6 +8,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ../data/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../data/traefik/acme/acme.json:/etc/traefik/acme/acme.json
     networks:
       - web
     labels:
@@ -53,7 +54,7 @@ services:
       - SMTP_FROM=${SMTP_FROM}
       
       # API URLs (using Traefik routing)
-      - API_URL=http://${DOMAIN}/api
+      - API_URL=http://api.${DOMAIN}
       - FRONTEND_URL=http://${DOMAIN}
       
       # Discord Notifications
@@ -74,8 +75,8 @@ services:
     container_name: frontend
     restart: unless-stopped
     environment:
-      # API Configuration
-      - VITE_API_URL=http://${DOMAIN}/api
+      # API Configuration (using Traefik routing)
+      - VITE_API_URL=http://api.${DOMAIN}
       - VITE_PUBLIC_URL=http://${DOMAIN}
       - VITE_APP_NAME=${APP_NAME:-Task Manager}
     depends_on:

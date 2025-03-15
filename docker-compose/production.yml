@@ -5,25 +5,13 @@ services:
     image: traefik:v2.10
     container_name: traefik
     restart: unless-stopped
-    command:
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--entrypoints.http.address=:80"
-      - "--entrypoints.https.address=:443"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http"
-      - "--certificatesresolvers.letsencrypt.acme.email=${EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json"
-      - "--entrypoints.http.http.redirections.entryPoint.to=https"
-      - "--entrypoints.http.http.redirections.entryPoint.scheme=https"
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ../data/traefik/acme.json:/etc/traefik/acme/acme.json
+      - ../data/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../data/traefik/acme/acme.json:/etc/traefik/acme/acme.json
     networks:
       - web
     labels:
@@ -71,8 +59,8 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
       
-      # API URLs (using HTTPS)
-      - API_URL=https://${DOMAIN}/api
+      # API URLs (using HTTPS with Traefik routing)
+      - API_URL=https://api.${DOMAIN}
       - FRONTEND_URL=https://${DOMAIN}
       
       # Discord Notifications

@@ -56,8 +56,8 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
       
-      # API URLs (supporting both HTTP and HTTPS during transition)
-      - API_URL=${PROTOCOL:-https}://${DOMAIN}/api
+      # API URLs (using subdomains with protocol switching)
+      - API_URL=${PROTOCOL:-https}://api.${DOMAIN}
       - FRONTEND_URL=${PROTOCOL:-https}://${DOMAIN}
       
       # Discord Notifications
@@ -84,7 +84,7 @@ services:
     container_name: frontend
     restart: unless-stopped
     environment:
-      # API Configuration (supporting both HTTP and HTTPS during transition)
+      # API Configuration (using subdomains with protocol switching)
       - VITE_API_URL=${PROTOCOL:-https}://api.${DOMAIN}
       - VITE_PUBLIC_URL=${PROTOCOL:-https}://${DOMAIN}
       - VITE_APP_NAME=${APP_NAME:-Task Manager}

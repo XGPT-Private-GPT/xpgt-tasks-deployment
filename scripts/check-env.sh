@@ -33,8 +33,8 @@ export SMTP_FROM=${SMTP_FROM:?"SMTP_FROM is required"}
 # Discord Configuration
 export DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-""}
 
-# API URLs
-export API_URL=${API_URL:-"${PROTOCOL}://${DOMAIN}"}/api
+# API URLs (using Traefik routing)
+export API_URL=${API_URL:-"${PROTOCOL}://api.${DOMAIN}"}  # For external access
 export FRONTEND_URL=${FRONTEND_URL:-"${PROTOCOL}://${DOMAIN}"}
 
 # Frontend Configuration
@@ -58,23 +58,34 @@ echo "FRONTEND_URL: $FRONTEND_URL"
 echo "APP_NAME: $APP_NAME"
 
 echo ""
-echo "📂 Checking directories..."
-if [ -d "data/traefik" ]; then
-  echo "✅ data/traefik directory exists"
-else
-  echo "❌ data/traefik directory is missing"
+echo "📂 Setting up directories and files..."
+
+# Create directories if they don't exist
+mkdir -p data/traefik
+mkdir -p data/mongodb
+mkdir -p data/traefik/acme
+
+# Initialize acme.json if it doesn't exist
+if [ ! -f "data/traefik/acme/acme.json" ]; then
+  echo "🔒 Creating acme.json for SSL certificates..."
+  touch data/traefik/acme/acme.json
+  chmod 600 data/traefik/acme/acme.json
 fi
 
-if [ -d "data/mongodb" ]; then
-  echo "✅ data/mongodb directory exists"
-else
-  echo "❌ data/mongodb directory is missing"
-fi
-
+# Check file permissions
 echo ""
-echo "📄 Checking Traefik configuration..."
-if [ -f "data/traefik/traefik.yml" ]; then
-  echo "✅ Traefik configuration file exists"
+echo "🔍 Checking file permissions..."
+if [ "$(stat -f "%p" data/traefik/acme/acme.json)" = "100600" ]; then
+  echo "✅ acme.json has correct permissions (600)"
 else
-  echo "❌ Traefik configuration file is missing"
+  echo "⚠️  Fixing acme.json permissions..."
+  chmod 600 data/traefik/acme/acme.json
+fi
+
+# Verify all required directories exist
+if [ -d "data/traefik" ] && [ -d "data/mongodb" ]; then
+  echo "✅ All required directories exist"
+else
+  echo "❌ Some required directories are missing"
+  exit 1
 fi
