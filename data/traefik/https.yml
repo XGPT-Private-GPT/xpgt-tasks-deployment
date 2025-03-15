@@ -2,9 +2,15 @@ api:
   dashboard: true
   insecure: true
 
+# Full HTTPS configuration
 entryPoints:
   http:
     address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
   https:
     address: ":443"
 
@@ -20,8 +26,6 @@ providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
-    # HTTP/HTTPS routing will be controlled via Docker labels
 
-accessLog: {}
 log:
   level: INFO

@@ -7,8 +7,7 @@ services:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ../data/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ../data/traefik/acme/acme.json:/etc/traefik/acme/acme.json
+      - ../data/traefik/http.yml:/etc/traefik/traefik.yml:ro
     networks:
       - web
     labels:

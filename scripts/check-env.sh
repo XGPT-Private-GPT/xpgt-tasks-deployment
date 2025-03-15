@@ -10,7 +10,23 @@ echo "🔍 Checking and exporting environment variables..."
 export DOMAIN=${DOMAIN:?"DOMAIN is required"}
 export EMAIL=${EMAIL:?"EMAIL is required"}
 export IMAGE_PATH=${IMAGE_PATH:?"IMAGE_PATH is required"}
-export PROTOCOL=${PROTOCOL:-https}
+# Force HTTP protocol for http-only mode if script name contains "http-only"
+if [[ "$0" == *"http-only"* ]]; then
+  export PROTOCOL="http"
+else
+  export PROTOCOL=${PROTOCOL:-https}
+fi
+
+# Create required directories
+mkdir -p data/traefik
+mkdir -p data/mongodb
+mkdir -p data/traefik/acme
+
+# Initialize acme.json if it doesn't exist
+if [ ! -f "data/traefik/acme/acme.json" ]; then
+  echo "🔒 Creating acme.json for SSL certificates..."
+  install -m 600 /dev/null data/traefik/acme/acme.json
+fi
 
 # MongoDB Configuration
 export MONGO_USERNAME=${MONGO_USERNAME:-admin}
@@ -56,36 +72,3 @@ echo "JWT_EXPIRES_IN: $JWT_EXPIRES_IN"
 echo "API_URL: $API_URL"
 echo "FRONTEND_URL: $FRONTEND_URL"
 echo "APP_NAME: $APP_NAME"
-
-echo ""
-echo "📂 Setting up directories and files..."
-
-# Create directories if they don't exist
-mkdir -p data/traefik
-mkdir -p data/mongodb
-mkdir -p data/traefik/acme
-
-# Initialize acme.json if it doesn't exist
-if [ ! -f "data/traefik/acme/acme.json" ]; then
-  echo "🔒 Creating acme.json for SSL certificates..."
-  touch data/traefik/acme/acme.json
-  chmod 600 data/traefik/acme/acme.json
-fi
-
-# Check file permissions
-echo ""
-echo "🔍 Checking file permissions..."
-if [ "$(stat -f "%p" data/traefik/acme/acme.json)" = "100600" ]; then
-  echo "✅ acme.json has correct permissions (600)"
-else
-  echo "⚠️  Fixing acme.json permissions..."
-  chmod 600 data/traefik/acme/acme.json
-fi
-
-# Verify all required directories exist
-if [ -d "data/traefik" ] && [ -d "data/mongodb" ]; then
-  echo "✅ All required directories exist"
-else
-  echo "❌ Some required directories are missing"
-  exit 1
-fi
