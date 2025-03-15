@@ -24,22 +24,10 @@ fi
 
 source .env
 
-# Validate PROTOCOL setting
-if [ "$PROTOCOL" != "http" ] && [ "$PROTOCOL" != "https" ]; then
-  echo "❌ PROTOCOL must be either 'http' or 'https'"
-  exit 1
-fi
-
-# Set SSL variables based on protocol
-if [ "$PROTOCOL" = "https" ]; then
-  export IS_HTTPS=true
-  export TLS_RESOLVER=letsencrypt
-  echo "🔒 Using HTTPS mode with Let's Encrypt"
-else
-  export IS_HTTPS=false
-  export TLS_RESOLVER=""
-  echo "ℹ️ Using HTTP mode"
-fi
+# Always enable HTTPS support
+export IS_HTTPS=true
+export TLS_RESOLVER=letsencrypt
+echo "🔒 HTTPS enabled with Let's Encrypt (HTTP also supported)"
 
 # Pull the latest images
 echo "🔄 Pulling latest images..."
@@ -51,10 +39,6 @@ echo "🚀 Starting services..."
 docker compose -f docker-compose/docker-compose.yml up -d
 
 echo "✅ Deployment completed!"
-echo "🌐 Application should be available at ${PROTOCOL}://$DOMAIN"
-if [ "$PROTOCOL" = "http" ]; then
-  echo ""
-  echo "⚠️ Currently running in HTTP mode. To enable HTTPS:"
-  echo "1. Set PROTOCOL=https in .env"
-  echo "2. Run this script again"
-fi
+echo "🌐 Application is available at:"
+echo "   - https://$DOMAIN (secured with SSL)"
+echo "   - http://$DOMAIN"
