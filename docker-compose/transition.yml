@@ -57,7 +57,7 @@ services:
       - SMTP_FROM=${SMTP_FROM}
       
       # API URLs (supporting both HTTP and HTTPS during transition)
-      - API_URL=${PROTOCOL:-https}://api.${DOMAIN}
+      - API_URL=${PROTOCOL:-https}://${DOMAIN}/api
       - FRONTEND_URL=${PROTOCOL:-https}://${DOMAIN}
       
       # Discord Notifications

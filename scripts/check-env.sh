@@ -34,7 +34,7 @@ export SMTP_FROM=${SMTP_FROM:?"SMTP_FROM is required"}
 export DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-""}
 
 # API URLs
-export API_URL=${API_URL:-"${PROTOCOL}://api.${DOMAIN}"}
+export API_URL=${API_URL:-"${PROTOCOL}://${DOMAIN}"}/api
 export FRONTEND_URL=${FRONTEND_URL:-"${PROTOCOL}://${DOMAIN}"}
 
 # Frontend Configuration

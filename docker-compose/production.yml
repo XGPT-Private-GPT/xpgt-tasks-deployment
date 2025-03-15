@@ -72,7 +72,7 @@ services:
       - SMTP_FROM=${SMTP_FROM}
       
       # API URLs (using HTTPS)
-      - API_URL=https://api.${DOMAIN}
+      - API_URL=https://${DOMAIN}/api
       - FRONTEND_URL=https://${DOMAIN}
       
       # Discord Notifications
