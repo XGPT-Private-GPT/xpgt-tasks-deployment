@@ -53,7 +53,7 @@ services:
       - SMTP_FROM=${SMTP_FROM}
       
       # API URLs
-      - API_URL=http://${DOMAIN}/api
+      - API_URL=http://${DOMAIN}/be
       - FRONTEND_URL=http://${DOMAIN}
       
       # Discord Notifications
@@ -70,7 +70,7 @@ services:
     restart: unless-stopped
     environment:
       # API Configuration
-      - VITE_API_URL=http://${DOMAIN}/api
+      - VITE_API_URL=http://${DOMAIN}/be
       - VITE_PUBLIC_URL=http://${DOMAIN}
       - VITE_APP_NAME=${APP_NAME:-Task Manager}
     depends_on:
