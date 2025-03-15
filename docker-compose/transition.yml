@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../data/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../data/traefik/acme.json:/etc/traefik/acme/acme.json
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-securepassword}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-app}
+    volumes:
+      - ../data/mongodb:/data/db
+    networks:
+      - backend
+
+  backend:
+    image: ${IMAGE_PATH}/backend:latest
+    container_name: backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-securepassword}@mongodb:27017/${MONGO_DATABASE:-app}?authSource=admin
+    depends_on:
+      - mongodb
+    networks:
+      - web
+      - backend
+    labels:
+      - "traefik.enable=true"
+      # HTTP route
+      - "traefik.http.routers.backend-http.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.backend-http.entrypoints=http"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+      # HTTPS route
+      - "traefik.http.routers.backend-https.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.backend-https.entrypoints=https"
+      - "traefik.http.routers.backend-https.tls=true"
+      - "traefik.http.routers.backend-https.tls.certresolver=letsencrypt"
+
+  frontend:
+    image: ${IMAGE_PATH}/frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      # HTTP route
+      - "traefik.http.routers.frontend-http.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend-http.entrypoints=http"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      # HTTPS route
+      - "traefik.http.routers.frontend-https.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend-https.entrypoints=https"
+      - "traefik.http.routers.frontend-https.tls=true"
+      - "traefik.http.routers.frontend-https.tls.certresolver=letsencrypt"
+
+networks:
+  web:
+    name: web
+    external: false
+  backend:
+    name: backend
+    external: false
