@@ -8,6 +8,7 @@ echo "🚀 Starting deployment..."
 # Create required directories
 echo "📁 Creating necessary directories..."
 mkdir -p data/mongodb
+mkdir -p config/nginx/conf.d
 
 # Check if .env file exists and is readable
 if [ ! -f ".env" ]; then
@@ -46,17 +47,22 @@ fi
 
 # Set protocol to HTTP
 export PROTOCOL=http
-echo "ℹ️ Using HTTP mode"
+echo "ℹ️ Using HTTP mode with Nginx"
+
+# Create Nginx site configuration with proper domain
+echo "📝 Configuring Nginx for domain: $DOMAIN"
+sed "s/\${DOMAIN}/$DOMAIN/g" config/nginx/conf.d/default.conf > config/nginx/conf.d/default.conf.tmp
+mv config/nginx/conf.d/default.conf.tmp config/nginx/conf.d/default.conf
 
 # Pull the latest images
 echo "🔄 Pulling latest images..."
 docker pull ${IMAGE_PATH}/backend:latest
 docker pull ${IMAGE_PATH}/frontend:latest
+docker pull nginx:1.25-alpine
 
 # Start the containers
 echo "🚀 Starting services..."
 docker compose -f docker-compose/docker-compose.yml up -d
 
 echo "✅ Deployment completed!"
-echo "🌐 Application is available at:"
-echo "   🔗 http://$DOMAIN"
+echo "🌐 Application is available at: http://$DOMAIN"

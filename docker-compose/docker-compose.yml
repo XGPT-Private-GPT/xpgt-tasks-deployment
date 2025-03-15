@@ -1,22 +1,20 @@
 version: '3.8'
 
 services:
-  traefik:
-    image: traefik:v2.10
-    container_name: traefik
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nginx
     restart: unless-stopped
     ports:
       - "80:80"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ../data/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../config/nginx/conf.d:/etc/nginx/conf.d:ro
     networks:
       - web
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+    depends_on:
+      - backend
+      - frontend
 
   mongodb:
     image: mongo:6
@@ -54,9 +52,9 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
       
-      # API URLs (use protocol from environment)
-      - API_URL=${PROTOCOL}://${DOMAIN}/api
-      - FRONTEND_URL=${PROTOCOL}://${DOMAIN}
+      # API URLs
+      - API_URL=http://${DOMAIN}/api
+      - FRONTEND_URL=http://${DOMAIN}
       
       # Discord Notifications
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
@@ -65,37 +63,20 @@ services:
     networks:
       - web
       - backend
-    labels:
-      - "traefik.enable=true"
-      # Backend service and router configuration
-      - "traefik.http.services.backend.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.priority=100"
-      - "traefik.http.routers.backend.entrypoints=web"
-      - "traefik.http.routers.backend.middlewares=api-strip"
 
   frontend:
     image: ${IMAGE_PATH}/frontend:latest
     container_name: frontend
     restart: unless-stopped
     environment:
-      # API Configuration (use protocol from environment)
-      - VITE_API_URL=${PROTOCOL}://${DOMAIN}/api
-      - VITE_PUBLIC_URL=${PROTOCOL}://${DOMAIN}
+      # API Configuration
+      - VITE_API_URL=http://${DOMAIN}/api
+      - VITE_PUBLIC_URL=http://${DOMAIN}
       - VITE_APP_NAME=${APP_NAME:-Task Manager}
     depends_on:
       - backend
     networks:
       - web
-    labels:
-      - "traefik.enable=true"
-      # Frontend services configuration
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
-      # HTTP router
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend.priority=10"
-      - "traefik.http.routers.frontend.entrypoints=web"
 
 networks:
   web:
