@@ -2,9 +2,12 @@
 set -e
 
 cd "$(dirname "$0")/.."
-source .env
 
 echo "🔧 Starting HTTP-only deployment..."
+
+# Check and export environment variables
+echo "📝 Checking environment configuration..."
+source ./scripts/check-env.sh
 
 # Create necessary directories if they don't exist
 echo "📁 Creating necessary directories..."
@@ -16,13 +19,7 @@ echo "🔄 Pulling latest images..."
 docker pull ${IMAGE_PATH}/backend:latest
 docker pull ${IMAGE_PATH}/frontend:latest
 
-# Export the environment variables explicitly
-export DOMAIN
-export IMAGE_PATH
-export MONGO_USERNAME
-export MONGO_PASSWORD
-export MONGO_DATABASE
-export NODE_ENV
+
 
 # Start the containers in HTTP-only mode
 echo "🚀 Starting services in HTTP-only mode..."

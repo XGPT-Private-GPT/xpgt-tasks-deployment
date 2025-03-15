@@ -2,9 +2,12 @@
 set -e
 
 cd "$(dirname "$0")/.."
-source .env
 
 echo "🔄 Starting gradual transition to HTTPS..."
+
+# Check and export environment variables
+echo "📝 Checking environment configuration..."
+source ./scripts/check-env.sh
 
 # Pull the latest images
 echo "🔄 Pulling latest images..."

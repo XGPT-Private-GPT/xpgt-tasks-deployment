@@ -38,8 +38,30 @@ services:
     container_name: backend
     restart: unless-stopped
     environment:
+      # Server Configuration
       - NODE_ENV=production
+      - PORT=8080
+      
+      # Database Configuration
       - MONGODB_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-securepassword}@mongodb:27017/${MONGO_DATABASE:-app}?authSource=admin
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
+      
+      # Email Configuration
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      
+      # API URLs (supporting both HTTP and HTTPS during transition)
+      - API_URL=${PROTOCOL:-https}://api.${DOMAIN}
+      - FRONTEND_URL=${PROTOCOL:-https}://${DOMAIN}
+      
+      # Discord Notifications
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
     depends_on:
       - mongodb
     networks:
@@ -61,6 +83,11 @@ services:
     image: ${IMAGE_PATH}/frontend:latest
     container_name: frontend
     restart: unless-stopped
+    environment:
+      # API Configuration (supporting both HTTP and HTTPS during transition)
+      - VITE_API_URL=${PROTOCOL:-https}://api.${DOMAIN}
+      - VITE_PUBLIC_URL=${PROTOCOL:-https}://${DOMAIN}
+      - VITE_APP_NAME=${APP_NAME:-Task Manager}
     depends_on:
       - backend
     networks:
