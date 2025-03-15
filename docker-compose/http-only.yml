@@ -14,6 +14,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
       - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
 
   mongodb:
@@ -36,7 +37,7 @@ services:
     environment:
       # Server Configuration
       - NODE_ENV=production
-      - PORT=8080
+      - PORT=3000
       
       # Database Configuration
       - MONGODB_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-securepassword}@mongodb:27017/${MONGO_DATABASE:-app}?authSource=admin
@@ -53,7 +54,7 @@ services:
       - SMTP_FROM=${SMTP_FROM}
       
       # API URLs (using Traefik routing)
-      - API_URL=http://api.${DOMAIN}
+      - API_URL=http://${DOMAIN}/api
       - FRONTEND_URL=http://${DOMAIN}
       
       # Discord Notifications
@@ -66,7 +67,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`api.${DOMAIN}`)"
-      - "traefik.http.routers.backend.entrypoints=http"
+      - "traefik.http.routers.backend.entrypoints=web"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
   frontend:
@@ -85,7 +86,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend.entrypoints=http"
+      - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
 networks:

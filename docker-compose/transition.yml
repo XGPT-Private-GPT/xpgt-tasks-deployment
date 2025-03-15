@@ -40,7 +40,7 @@ services:
     environment:
       # Server Configuration
       - NODE_ENV=production
-      - PORT=8080
+      - PORT=3000
       
       # Database Configuration
       - MONGODB_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-securepassword}@mongodb:27017/${MONGO_DATABASE:-app}?authSource=admin
@@ -70,14 +70,14 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTP route
-      - "traefik.http.routers.backend-http.rule=Host(`api.${DOMAIN}`)"
-      - "traefik.http.routers.backend-http.entrypoints=http"
+      - "traefik.http.routers.backend-web.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.backend-web.entrypoints=web"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
       # HTTPS route
-      - "traefik.http.routers.backend-https.rule=Host(`api.${DOMAIN}`)"
-      - "traefik.http.routers.backend-https.entrypoints=https"
-      - "traefik.http.routers.backend-https.tls=true"
-      - "traefik.http.routers.backend-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.backend-secure.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.backend-secure.entrypoints=websecure"
+      - "traefik.http.routers.backend-secure.tls=true"
+      - "traefik.http.routers.backend-secure.tls.certresolver=letsencrypt"
 
   frontend:
     image: ${IMAGE_PATH}/frontend:latest
@@ -85,7 +85,7 @@ services:
     restart: unless-stopped
     environment:
       # API Configuration (using subdomains with protocol switching)
-      - VITE_API_URL=${PROTOCOL:-https}://api.${DOMAIN}
+      - VITE_API_URL=${PROTOCOL:-https}://${DOMAIN}/api
       - VITE_PUBLIC_URL=${PROTOCOL:-https}://${DOMAIN}
       - VITE_APP_NAME=${APP_NAME:-Task Manager}
     depends_on:
@@ -95,14 +95,14 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTP route
-      - "traefik.http.routers.frontend-http.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend-http.entrypoints=http"
+      - "traefik.http.routers.frontend-web.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend-web.entrypoints=web"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
       # HTTPS route
-      - "traefik.http.routers.frontend-https.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend-https.entrypoints=https"
-      - "traefik.http.routers.frontend-https.tls=true"
-      - "traefik.http.routers.frontend-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend-secure.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
+      - "traefik.http.routers.frontend-secure.tls=true"
+      - "traefik.http.routers.frontend-secure.tls.certresolver=letsencrypt"
 
 networks:
   web:
