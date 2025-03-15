@@ -7,11 +7,9 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ../data/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ../data/traefik/acme/acme.json:/etc/traefik/acme/acme.json:rw
     networks:
       - web
     labels:
@@ -56,7 +54,7 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
       
-      # API URLs
+      # API URLs (use protocol from environment)
       - API_URL=${PROTOCOL}://${DOMAIN}/api
       - FRONTEND_URL=${PROTOCOL}://${DOMAIN}
       
@@ -72,20 +70,17 @@ services:
       # Common configurations
       - "traefik.http.middlewares.backend-strip.stripprefix.prefixes=/api"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
-      # HTTP route
+      # HTTP router
       - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.entrypoints=web,websecure"
+      - "traefik.http.routers.backend.entrypoints=web"
       - "traefik.http.routers.backend.middlewares=backend-strip"
-      # Add TLS if PROTOCOL is https
-      - "traefik.http.routers.backend.tls=${IS_HTTPS:-false}"
-      - "traefik.http.routers.backend.tls.certresolver=${TLS_RESOLVER:-}"
 
   frontend:
     image: ${IMAGE_PATH}/frontend:latest
     container_name: frontend
     restart: unless-stopped
     environment:
-      # API Configuration
+      # API Configuration (use protocol from environment)
       - VITE_API_URL=${PROTOCOL}://${DOMAIN}/api
       - VITE_PUBLIC_URL=${PROTOCOL}://${DOMAIN}
       - VITE_APP_NAME=${APP_NAME:-Task Manager}
@@ -95,13 +90,11 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      # Route configuration
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend.entrypoints=web,websecure"
+      # Frontend services configuration
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
-      # Add TLS if PROTOCOL is https
-      - "traefik.http.routers.frontend.tls=${IS_HTTPS:-false}"
-      - "traefik.http.routers.frontend.tls.certresolver=${TLS_RESOLVER:-}"
+      # HTTP router
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
 
 networks:
   web:

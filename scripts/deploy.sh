@@ -7,14 +7,7 @@ echo "🚀 Starting deployment..."
 
 # Create required directories
 echo "📁 Creating necessary directories..."
-mkdir -p data/traefik/acme
 mkdir -p data/mongodb
-
-# Initialize acme.json if it doesn't exist
-if [ ! -f "data/traefik/acme/acme.json" ]; then
-  echo "🔒 Creating acme.json for SSL certificates..."
-  install -m 600 /dev/null data/traefik/acme/acme.json
-fi
 
 # Check if .env file exists and is readable
 if [ ! -f ".env" ]; then
@@ -51,10 +44,9 @@ if [ $missing_vars -eq 1 ]; then
   exit 1
 fi
 
-# Always enable HTTPS support
-export IS_HTTPS=true
-export TLS_RESOLVER=letsencrypt
-echo "🔒 HTTPS enabled with Let's Encrypt (HTTP also supported)"
+# Set protocol to HTTP
+export PROTOCOL=http
+echo "ℹ️ Using HTTP mode"
 
 # Pull the latest images
 echo "🔄 Pulling latest images..."
@@ -67,5 +59,4 @@ docker compose -f docker-compose/docker-compose.yml up -d
 
 echo "✅ Deployment completed!"
 echo "🌐 Application is available at:"
-echo "   - https://$DOMAIN (secured with SSL)"
-echo "   - http://$DOMAIN"
+echo "   🔗 http://$DOMAIN"
