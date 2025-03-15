@@ -16,9 +16,17 @@ echo "🔄 Pulling latest images..."
 docker pull ${IMAGE_PATH}/backend:latest
 docker pull ${IMAGE_PATH}/frontend:latest
 
+# Export the environment variables explicitly
+export DOMAIN
+export IMAGE_PATH
+export MONGO_USERNAME
+export MONGO_PASSWORD
+export MONGO_DATABASE
+export NODE_ENV
+
 # Start the containers in HTTP-only mode
 echo "🚀 Starting services in HTTP-only mode..."
-docker compose -f docker-compose/http-only.yml up -d
+docker compose -f docker-compose/http-only.yml --env-file .env up -d
 
 echo "✅ HTTP-only deployment completed!"
 echo "🌐 Application should be available at http://$DOMAIN"
