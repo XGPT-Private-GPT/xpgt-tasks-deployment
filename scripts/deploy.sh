@@ -16,13 +16,40 @@ if [ ! -f "data/traefik/acme/acme.json" ]; then
   install -m 600 /dev/null data/traefik/acme/acme.json
 fi
 
-# Check if .env file exists
+# Check if .env file exists and is readable
 if [ ! -f ".env" ]; then
   echo "❌ No .env file found. Please copy .env.template to .env and configure it."
   exit 1
 fi
 
-source .env
+if [ ! -r ".env" ]; then
+  echo "❌ .env file is not readable. Please check permissions."
+  exit 1
+fi
+
+echo "📝 Loading environment variables..."
+set -a
+if ! source .env; then
+  echo "❌ Failed to source .env file"
+  exit 1
+fi
+set +a
+
+# Verify required environment variables
+required_vars=("DOMAIN" "IMAGE_PATH" "JWT_SECRET" "SMTP_USER" "SMTP_PASS" "SMTP_FROM" "DISCORD_WEBHOOK_URL")
+missing_vars=0
+
+for var in "${required_vars[@]}"; do
+  if [ -z "${!var}" ]; then
+    echo "❌ Required variable $var is not set in .env"
+    missing_vars=1
+  fi
+done
+
+if [ $missing_vars -eq 1 ]; then
+  echo "Please set all required variables in .env and try again."
+  exit 1
+fi
 
 # Always enable HTTPS support
 export IS_HTTPS=true
